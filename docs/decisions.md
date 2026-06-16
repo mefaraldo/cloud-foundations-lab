@@ -61,3 +61,32 @@ Tradeoff: depende de conectividad y de los free-tier hours disponibles (60 hs/me
 Con Docker local se trabaja offline y sin límite de tiempo.
 
 Resultado: Codespaces para las clases, Docker local como fallback documentado en el README.
+### 005 - Identidad y credenciales en el lab
+
+Decision: Usar roles con STS en lugar de access keys de larga duracion para acceso entre servicios.
+
+Contexto: Las access keys no expiran y si se filtran dan acceso indefinido. Los roles con STS generan credenciales temporales (15 minutos a 12 horas) con trazabilidad.
+
+Alternativas:
+- Access keys rotadas manualmente
+- Usar un vault o secret manager
+
+Tradeoff: Asumir un rol requiere que el servicio tenga permiso de sts:AssumeRole y que el rol tenga un trust policy correcto. Implica mas configuracion inicial, pero reduce el riesgo de forma significativa.
+
+Resultado: Se creo app-role con una politica de privilegio minimo (solo lectura) sobre el bucket course-data-raw. Comprobamos que las credenciales generadas por STS expiran automaticamente, a diferencia de la access key fija creada para lab-user.
+
+Nota adicional: en LocalStack Community, un Deny explicito no bloquea las llamadas (lo verificamos en la practica). En AWS real, el Deny explicito siempre tiene prioridad sobre cualquier Allow.
+
+### 006 - Instance profile en lugar de access keys en la instancia
+
+Decision: Usar instance profile (rol vía IMDSv2) en lugar de access keys guardadas a mano en la maquina virtual.
+
+Contexto: Una instancia EC2 que necesita leer S3 tiene dos caminos posibles: (a) guardar una access key fija directo en el disco de la maquina, o (b) usar un rol IAM conectado mediante un instance profile, que entrega credenciales temporales automaticamente.
+
+Alternativas:
+- Guardar access keys de larga duracion en el archivo de configuracion de la maquina
+- Usar un instance profile con un rol IAM (la opcion elegida)
+
+Tradeoff: Guardar la clave fija es mas directo y rapido de configurar, pero deja una credencial permanente en el disco — si alguien copia o accede a esa maquina, tiene acceso indefinido. Usar el instance profile requiere mas pasos de configuracion inicial, pero las credenciales rotan solas y nunca quedan escritas en ningun archivo.
+
+Resultado: Se creo 'app-instance-profile' conectado al rol 'app-role' de la clase anterior, y se lo asigno a la instancia EC2 al crearla. Esto cierra el circuito completo: la maquina (EC2) usa el permiso temporal (rol via STS) para leer el archivo (S3), sin ninguna contraseña fija de por medio.
