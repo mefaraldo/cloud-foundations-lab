@@ -3,7 +3,7 @@
   "BudgetType": "COST",
   "TimeUnit": "MONTHLY",
   "BudgetLimit": {
-    "Amount": "20",
+    "Amount": "25",
     "Unit": "USD"
   },
   "CostTypes": {
