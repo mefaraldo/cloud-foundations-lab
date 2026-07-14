@@ -1,0 +1,27 @@
+{
+  "AlarmName": "rds-conexiones-altas-matafuegos",
+  "AlarmDescription": "Las conexiones a la base de datos superaron el 80% del límite. Revisar si hay queries lentas o conexiones abiertas sin cerrar.",
+  "ActionsEnabled": true,
+  "AlarmActions": [
+    "arn:aws:sns:us-east-1:000000000000:project-alerts"
+  ],
+  "OKActions": [
+    "arn:aws:sns:us-east-1:000000000000:project-alerts"
+  ],
+  "MetricName": "DatabaseConnections",
+  "Namespace": "AWS/RDS",
+  "Statistic": "Average",
+  "Dimensions": [
+    { "Name": "DBInstanceIdentifier", "Value": "matafuegos-db" }
+  ],
+  "Period": 60,
+  "EvaluationPeriods": 3,
+  "DatapointsToAlarm": 3,
+  "Threshold": 40.0,
+  "ComparisonOperator": "GreaterThanThreshold",
+  "TreatMissingData": "notBreaching",
+  "Tags": [
+    { "Key": "Lab", "Value": "11" },
+    { "Key": "Proyecto", "Value": "matafuegos-focus" }
+  ]
+}
